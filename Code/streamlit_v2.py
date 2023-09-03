@@ -18,6 +18,8 @@ st.set_page_config(
 st.sidebar.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
 st.sidebar.image("Code/cropped-Sigmoid_logo_3x.png", use_column_width=True)
 st.sidebar.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
+st.markdown('<style>div.row-widget.stButton > button:first-child {background-color: blue; color: white;}</style>', unsafe_allow_html=True)
+
 with st.sidebar:
         st.markdown(
             "## How to use\n"
@@ -34,8 +36,8 @@ with st.sidebar:
             value=os.environ.get("OPENAI_API_KEY", None)
             or st.session_state.get("OPENAI_API_KEY", ""),
         )
-
-        st.session_state["OPENAI_API_KEY"] = api_key_input
+        if st.sidebar.button("Enter"):
+            st.session_state["OPENAI_API_KEY"] = api_key_input
 
 
 openai_api_key = st.session_state.get("OPENAI_API_KEY")
@@ -253,7 +255,6 @@ with tab3:
 
         user_message = code_templete.format_messages(instruction=instruction,user_question=user_question)
                 
-        st.markdown('<style>div.row-widget.stButton > button:first-child {background-color: blue; color: white;}</style>', unsafe_allow_html=True)
         chat2 = ChatOpenAI(temperature=0.0, model=model,openai_api_key=openai_api_key)
         if st.button("Get Answer"):
             if user_question:

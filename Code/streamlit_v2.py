@@ -41,7 +41,7 @@ with st.sidebar:
 openai_api_key = st.session_state.get("OPENAI_API_KEY")
 if not openai_api_key:
     st.warning(
-        "🔐 Enter API Key to Learn More About Me 😊, You can get a key at"
+        "🔐 Enter API Key to Know More About Me 😊, You can get a key at"
         " https://platform.openai.com/account/api-keys."
     )
 if not is_open_ai_key_valid(openai_api_key):

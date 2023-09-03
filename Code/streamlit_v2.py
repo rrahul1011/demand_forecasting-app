@@ -78,7 +78,7 @@ def select_level(d):
 
 
 ##Reading the data
-df_dash = pd.read_csv("/Users/rahulkushwaha/Desktop/demand forecasting app/demand_forecasting-app/Data/Retail_Data.csv")
+df_dash = pd.read_csv("Data/Retail_Data.csv")
 tab1, tab2 ,tab3= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI"])
 with tab2:
 

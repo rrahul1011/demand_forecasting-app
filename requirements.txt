@@ -1,7 +1,4 @@
-streamlit==1.22.0
-tiktoken
-langchain
-youtube-transcript-api==0.6.0
+
 pytube==15.0.0
 faiss-cpu==1.7.4
 openai==0.27.6
@@ -29,5 +26,9 @@ fpdf
 langchain
 logger
 pinecone-client
+streamlit
+langchain
+openai
 chromadb
+tiktoken
 

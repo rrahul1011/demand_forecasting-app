@@ -252,7 +252,7 @@ with tab3:
         17. Do not enclose the code in triple backticks.
         18. Only give the executable line; no non-executable characters.
         19. Call the function below the response in the same script.
-        20. Always call the function below the script"""
+        20. Always call the function below the script call the function"""
 
         user_message = code_templete.format_messages(instruction=instruction,user_question=user_question)
                 

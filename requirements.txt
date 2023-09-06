@@ -25,10 +25,9 @@ seaborn
 numpy
 pyperclip
 openpyxl
-
 fpdf
 langchain
 logger
-
+chromadb
 
 

@@ -28,6 +28,6 @@ openpyxl
 fpdf
 langchain
 logger
-
+pinecone-client
 
 

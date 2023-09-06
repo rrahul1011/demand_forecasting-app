@@ -1,4 +1,4 @@
-python==3.10.0
+
 pytube==15.0.0
 faiss-cpu==1.7.4
 openai==0.27.6
@@ -29,6 +29,7 @@ pinecone-client
 streamlit
 langchain
 openai
-chromadb
 tiktoken
-
+Cython
+sentencepiece
+chromadb

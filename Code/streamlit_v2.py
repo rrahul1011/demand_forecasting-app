@@ -10,6 +10,12 @@ import seaborn as sns
 import pyperclip
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+import streamlit as st
+from langchain.llms import OpenAI
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.chains import RetrievalQA
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.set_page_config(
             page_title="Sigmoid GenAI",
@@ -283,12 +289,6 @@ with tab3:
     if __name__ == "__main__":
         main()
 with tab4:
-    import streamlit as st
-    from langchain.llms import OpenAI
-    from langchain.text_splitter import CharacterTextSplitter
-    from langchain.embeddings import OpenAIEmbeddings
-    from langchain.vectorstores import Chroma
-    from langchain.chains import RetrievalQA
 
     def generate_response(uploaded_file, openai_api_key, query_text):
         # Load document if file is uploaded
@@ -317,7 +317,7 @@ with tab4:
         result = []
 
         if st.button('Generate Response'):  # Add a button to trigger response generation
-            with st.spinner('Calculating...'):
+            with st.spinner('Generating...'):
                 if query_text:
                     response = generate_response(uploaded_file, openai_api_key, query_text)
                     result.append(response)

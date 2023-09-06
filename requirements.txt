@@ -29,5 +29,5 @@ fpdf
 langchain
 logger
 pinecone-client
-
+chromadb
 

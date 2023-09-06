@@ -284,10 +284,11 @@ with tab3:
         main()
 with tab4:
     import streamlit as st
+    import chromadb
     from langchain.llms import OpenAI
     from langchain.text_splitter import CharacterTextSplitter
     from langchain.embeddings import OpenAIEmbeddings
-    from langchain.vectorstores import Pinecone
+    from langchain.vectorstores import Chroma
     from langchain.chains import RetrievalQA
 
     def generate_response(uploaded_file, openai_api_key, query_text):

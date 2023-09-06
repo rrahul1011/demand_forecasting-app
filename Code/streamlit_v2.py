@@ -13,10 +13,10 @@ from langchain.prompts import ChatPromptTemplate
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.set_page_config(
             page_title="Sigmoid GenAI",
-            page_icon="Code/cropped-Sigmoid_logo_3x.png"  
+            page_icon="/Users/rahulkushwaha/Desktop/demand forecasting app/demand_forecasting-app/Code/cropped-Sigmoid_logo_3x.png"  
         )
 st.sidebar.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-st.sidebar.image("Code/cropped-Sigmoid_logo_3x.png", use_column_width=True)
+st.sidebar.image("/Users/rahulkushwaha/Desktop/demand forecasting app/demand_forecasting-app/Code/cropped-Sigmoid_logo_3x.png", use_column_width=True)
 st.sidebar.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
 st.markdown('<style>div.row-widget.stButton > button:first-child {background-color: blue; color: white;}</style>', unsafe_allow_html=True)
 
@@ -80,8 +80,8 @@ def select_level(d):
 
 
 ##Reading the data
-df_dash = pd.read_csv("Data/Retail_Data.csv")
-tab1, tab2 ,tab3= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI"])
+df_dash = pd.read_csv("/Users/rahulkushwaha/Desktop/demand forecasting app/demand_forecasting-app/Data/Retail_Data.csv")
+tab1, tab2 ,tab3,tab4= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A"])
 with tab2:
 
     def main():
@@ -280,5 +280,50 @@ with tab3:
         #         st.error(f"An error occurred: {e}")
 
     # Check if the script is run as the main program
+    if __name__ == "__main__":
+        main()
+with tab4:
+    import streamlit as st
+    from langchain.llms import OpenAI
+    from langchain.text_splitter import CharacterTextSplitter
+    from langchain.embeddings import OpenAIEmbeddings
+    from langchain.vectorstores import Chroma
+    from langchain.chains import RetrievalQA
+
+    def generate_response(uploaded_file, openai_api_key, query_text):
+        # Load document if file is uploaded
+        if uploaded_file is not None:
+            documents = [uploaded_file.read().decode()]
+            # Split documents into chunks
+            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+            texts = text_splitter.create_documents(documents)
+            # Select embeddings
+            embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+            # Create a vectorstore from documents
+            db = Chroma.from_documents(texts, embeddings)
+            # Create retriever interface
+            retriever = db.as_retriever()
+            # Create QA chain
+            qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key=openai_api_key), chain_type='stuff', retriever=retriever)
+            return qa.run(query_text)
+    def main():
+        # File upload
+        uploaded_file = st.file_uploader('Upload an article', type=['txt', 'pdf'])
+
+        # Query text
+        query_text = st.text_input('Enter your question:', placeholder='Please provide a short summary.', disabled=not uploaded_file)
+
+        # Form input and query
+        result = []
+
+        if st.button('Generate Response'):  # Add a button to trigger response generation
+            with st.spinner('Calculating...'):
+                if query_text:
+                    response = generate_response(uploaded_file, openai_api_key, query_text)
+                    result.append(response)
+
+        if len(result):
+            st.write(result[0])  # Display the response if there is a result
+
     if __name__ == "__main__":
         main()

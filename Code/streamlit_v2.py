@@ -13,10 +13,10 @@ from langchain.prompts import ChatPromptTemplate
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.set_page_config(
             page_title="Sigmoid GenAI",
-            page_icon="/Users/rahulkushwaha/Desktop/demand forecasting app/demand_forecasting-app/Code/cropped-Sigmoid_logo_3x.png"  
+            page_icon="Code/cropped-Sigmoid_logo_3x.png"  
         )
 st.sidebar.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-st.sidebar.image("/Users/rahulkushwaha/Desktop/demand forecasting app/demand_forecasting-app/Code/cropped-Sigmoid_logo_3x.png", use_column_width=True)
+st.sidebar.image("Code/cropped-Sigmoid_logo_3x.png", use_column_width=True)
 st.sidebar.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
 st.markdown('<style>div.row-widget.stButton > button:first-child {background-color: blue; color: white;}</style>', unsafe_allow_html=True)
 
@@ -80,7 +80,7 @@ def select_level(d):
 
 
 ##Reading the data
-df_dash = pd.read_csv("/Users/rahulkushwaha/Desktop/demand forecasting app/demand_forecasting-app/Data/Retail_Data.csv")
+df_dash = pd.read_csv("Data/Retail_Data.csv")
 tab1, tab2 ,tab3,tab4= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A"])
 with tab2:
 

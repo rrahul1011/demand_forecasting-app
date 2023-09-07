@@ -237,7 +237,7 @@ with tab3:
         st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
         st.markdown('<p style="color:red; font-size:25px; font-weight:bold;">Ask a question about the dataset:</p>', unsafe_allow_html=True)
         user_question = st.text_input(" ")
-        
+        user_question+= "call the function below in the same script with 'df_user"
 
         code_string ="""Generate the python code based on the user question\
             that is delimated by triple backticks\

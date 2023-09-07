@@ -65,17 +65,17 @@ def select_country(d):
     return country
 
 def select_level(d):
-    levels = ["geo", "channel", "brand", "SKU"]
+    levels = ["geo", "category", "brand", "SKU"]
     selected_levels = st.sidebar.multiselect("Select Levels", levels, default=["geo"])
 
-    selected_channel = None
+    selected_category = None
     selected_brand = None
     selected_SKU = None
 
-    if "channel" in selected_levels:
-        st.sidebar.header("Channel")
-        channel_options = d["channel"].unique().tolist()
-        selected_channel = st.sidebar.selectbox("Select Channel:", channel_options)
+    if "category" in selected_levels:
+        st.sidebar.header("Category")
+        category_options = d["category"].unique().tolist()
+        selected_category = st.sidebar.selectbox("Select category:", category_options)
 
     if "brand" in selected_levels:
         st.sidebar.header("Brand")
@@ -87,12 +87,12 @@ def select_level(d):
         SKU_options = d["SKU"].unique().tolist()
         selected_SKU = st.sidebar.selectbox("Select SKU:", SKU_options)
 
-    return selected_levels, selected_channel, selected_brand, selected_SKU
+    return selected_levels, selected_category, selected_brand, selected_SKU
 
 
 
 ##Reading the data
-df_dash = pd.read_csv("Data/Retail_Data.csv")
+df_dash = pd.read_csv("Data/retail3.csv")
 tab1, tab2 ,tab3,tab4= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A"])
 with tab2:
 
@@ -103,7 +103,7 @@ with tab2:
         st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
         st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻  How to Use:</p>', unsafe_allow_html=True)
         st.write("1. Select a country from the sidebar to filter data.")
-        st.write("2. Choose the levels you want to analyze: geo, channel, brand, SKU.")
+        st.write("2. Choose the levels you want to analyze: geo, category, brand, SKU.")
         st.write("3. Visualize your time series data.")
         st.write("4. Click on Get insights.")
         st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
@@ -144,7 +144,7 @@ with tab2:
                 Trend: Indicates the trend of the data for a specific scenario.
                 year on year growth dataset has the following columns:
                 Year: Indicates the year.
-                yoy_growth: Indicates the percentage volume change compared to the previous year.
+                yoy_growth: Indicates the percentage quantity change compared to the previous year.
             4.Start the output as "Insight and Findings:" and report in point  form
             5.Analyze the trend based on the 'Trend' column of the trend_dataset:
                 a.Analyze Historical Data.
@@ -154,8 +154,7 @@ with tab2:
             8.The datasets: {data_trend_3} for trend analysis and {data_yoy} for year-on-year growth analysis.
             9.Report back only the insights and findings.
             10.Use at most 200 words.
-            11.provide conclusions about the dataset's performance in 50 words over the years and include suggestions for why fluctuations occurred also include the year on year it\
-    
+            11.provide conclusions about the dataset's performance in 50 words over the years \
             12.Present your findings as if you are analyzing a plot."""
             chat = ChatOpenAI(temperature=0.0, model=model,openai_api_key=openai_api_key)
             user_analysis = analysis_templete.format_messages(instruction_analyis=instruction_analyis)

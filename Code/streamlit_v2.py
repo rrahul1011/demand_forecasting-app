@@ -17,6 +17,11 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import FAISS
+from PyPDF2 import PdfFileReader, PdfFileWriter,PdfReader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import pickle
+from langchain.callbacks import get_openai_callback
+from langchain.chains.question_answering import load_qa_chain
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.set_page_config(
             page_title="Sigmoid GenAI",
@@ -307,6 +312,63 @@ with tab4:
             # Create QA chain
             qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key=openai_api_key), chain_type='stuff', retriever=retriever)
             return qa.run(query_text)
+    def pdf_chat(uploaded_file,query):
+
+        if uploaded_file is not None:
+            pdf_reader = PdfReader(uploaded_file)
+
+            text = ""
+            for page in pdf_reader.pages:
+                text+= page.extract_text()
+
+            #langchain_textspliter
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size = 1000,
+                chunk_overlap = 200,
+                length_function = len
+            )
+
+            chunks = text_splitter.split_text(text=text)
+
+            
+            #store pdf name
+            store_name = uploaded_file.name[:-4]
+            
+            if os.path.exists(f"{store_name}.pkl"):
+                with open(f"{store_name}.pkl","rb") as f:
+                    vectorstore = pickle.load(f)
+                #st.write("Already, Embeddings loaded from the your folder (disks)")
+            else:
+                #embedding (Openai methods) 
+                embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+
+                #Store the chunks part in db (vector)
+                vectorstore = FAISS.from_texts(chunks,embedding=embeddings)
+
+                with open(f"{store_name}.pkl","wb") as f:
+                    pickle.dump(vectorstore,f)
+                
+                #st.write("Embedding computation completed")
+
+            #st.write(chunks)
+            
+            #Accept user questions/query
+
+    
+            #st.write(query)
+
+            if query:
+                docs = vectorstore.similarity_search(query=query,k=3)
+                #st.write(docs)
+                
+                #openai rank lnv process
+                llm = OpenAI(temperature=0,openai_api_key=openai_api_key)
+                chain = load_qa_chain(llm=llm, chain_type= "stuff")
+                
+                with get_openai_callback() as cb:
+                    response = chain.run(input_documents = docs, question = query)
+                    
+        return response
     def main():
         # File upload
         uploaded_file = st.file_uploader('Upload an article', type=['txt', 'pdf'])
@@ -320,8 +382,16 @@ with tab4:
         if st.button('Generate Response'):  # Add a button to trigger response generation
             with st.spinner('Generating...'):
                 if query_text:
-                    response = generate_response(uploaded_file, openai_api_key, query_text)
-                    result.append(response)
+                    if uploaded_file.type == 'text/plain':
+                        response = generate_response(uploaded_file, openai_api_key, query_text)
+                        result.append(response)
+                    elif uploaded_file.type == 'application/pdf':
+                        # Handle plain text file
+                        response = pdf_chat(uploaded_file,query_text)
+                        result.append(response)
+                    else:
+                        response = "Unsupported file format. Please upload a PDF or text file."
+
 
         if len(result):
             st.write(result[0])  # Display the response if there is a result

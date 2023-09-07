@@ -16,6 +16,7 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+from langchain.vectorstores import FAISS
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.set_page_config(
             page_title="Sigmoid GenAI",
@@ -300,7 +301,7 @@ with tab4:
             # Select embeddings
             embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
             # Create a vectorstore from documents
-            db = Chroma.from_documents(texts, embeddings)
+            db = FAISS.from_documents(texts, embeddings)
             # Create retriever interface
             retriever = db.as_retriever()
             # Create QA chain

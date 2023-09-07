@@ -247,7 +247,7 @@ with tab3:
         code_templete= ChatPromptTemplate.from_template(code_string)
 
         instruction =f"""1. You are functioning as an AI data analyst.
-        2. Task: Respond to questions based on the provided dataset.
+        2. Task: Respond to questions based on the provided dataset by giving code
         3. Dataset columns enclosed in square brackets {df_user.columns.tolist()}.
         4. Columns Description in dict format - {column_descriptions}.
         5. Provide code based on the user's question.
@@ -265,7 +265,7 @@ with tab3:
         17. Do not enclose the code in triple backticks.
         18. Only give the executable line; no non-executable characters.
         19. Call the function below the response in the same script.
-        20. Always call the function below the script call the function"""
+        20. Always call the function in the same script with 'df_user'"""
 
         user_message = code_templete.format_messages(instruction=instruction,user_question=user_question)
                 
@@ -394,6 +394,7 @@ with tab4:
 
         # Query text
         query_text = st.text_input('Enter your question:', placeholder='Please provide a short summary.', disabled=not uploaded_file)
+        query_text+= "Always give the complete answer"
 
         # Form input and query
         result = []

@@ -1,4 +1,5 @@
 pytube
+chromadb
 faiss-cpu
 openai
 pdfplumber
@@ -31,4 +32,3 @@ openai
 tiktoken
 Cython
 sentencepiece
-chromadb

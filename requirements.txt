@@ -33,3 +33,5 @@ tiktoken
 Cython
 sentencepiece
 pip install faiss-cpu
+pickle
+

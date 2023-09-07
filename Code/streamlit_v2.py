@@ -97,16 +97,17 @@ tab1, tab2 ,tab3,tab4= st.tabs(["About the App", "Demand forecasting interpreate
 with tab2:
 
     def main():
+       
+        # st.markdown("<h1 style='color: blue;'>GenAI: Time Series Dashboard</h1>", unsafe_allow_html=True)
+        st.markdown('<p style="color:red; font-size:30px; font-weight:bold;">GenAI: Time Series Dashboard:</p>', unsafe_allow_html=True)
         st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.markdown("<h1 style='color: blue;'>GenAI: Time Series Dashboard</h1>", unsafe_allow_html=True)
-        st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.subheader("👨‍💻  How to Use")
+        st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻  How to Use:</p>', unsafe_allow_html=True)
         st.write("1. Select a country from the sidebar to filter data.")
         st.write("2. Choose the levels you want to analyze: geo, channel, brand, SKU.")
         st.write("3. Visualize your time series data.")
         st.write("4. Click on Get insights.")
         st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.subheader(" ⚠️  Limitations")
+        st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">Limitations ⚠️:</p>', unsafe_allow_html=True)
         st.write("- It may not capture all nuances and context")
         st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
         st.sidebar.header("User Inputs")
@@ -153,29 +154,30 @@ with tab2:
             8.The datasets: {data_trend_3} for trend analysis and {data_yoy} for year-on-year growth analysis.
             9.Report back only the insights and findings.
             10.Use at most 200 words.
-            11.provide conclusions about the dataset's performance over the years and include suggestions for why fluctuations occurred also include the year on year 
+            11.provide conclusions about the dataset's performance in 50 words over the years and include suggestions for why fluctuations occurred also include the year on year it\
+    
             12.Present your findings as if you are analyzing a plot."""
             chat = ChatOpenAI(temperature=0.0, model=model,openai_api_key=openai_api_key)
             user_analysis = analysis_templete.format_messages(instruction_analyis=instruction_analyis)
-            response = chat(user_analysis)
-            st.write(response.content)
+            with st.spinner('Generating...'):
+                response = chat(user_analysis)
+                st.write(response.content)
         st.markdown("---")
 
     if __name__ == "__main__":
         main()
 with tab1:
-    st.header("About The App")
+    st.markdown('<p style="color:red; font-size:30px; font-weight:bold;">About The App:</p>', unsafe_allow_html=True)
     st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)   
-    # Add your app description and information here
     st.markdown("👋 Welcome to Sigmoid GenAI - Your Data Analysis APP!")
     st.write("This app is designed to help you analyze and visualize your data.")
     st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-    st.subheader("👨‍💻  How to Use")
+    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻  How to Use:</p>', unsafe_allow_html=True)
     st.write("1. Please enter your API key in side bar and click on the ENTER")
     st.write("2. From the top this page please select the required tab")
     st.write("3. Follow the instruction of that tab.")
     st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-    st.subheader("⚠️   Limitations")
+    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">Limitations ⚠️:</p>', unsafe_allow_html=True)
     st.write("Please note the following limitations:")
     st.write("- Active internet connection is required.")
     st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
@@ -189,7 +191,7 @@ with tab3:
     def main():
         st.markdown('<p style="color:red; font-size:30px; font-weight:bold;">CodeAI:</p>', unsafe_allow_html=True)
         st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">How to Use:</p>', unsafe_allow_html=True)
+        st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻 How to Use:</p>', unsafe_allow_html=True)
         st.markdown("""
         - 📂 Upload a CSV or Excel file containing your dataset.
         - 📝 Provide descriptions for each column of the dataset in the 'Column Descriptions' section.
@@ -295,6 +297,24 @@ with tab3:
     if __name__ == "__main__":
         main()
 with tab4:
+    st.markdown('<p style="color:red; font-size:30px; font-weight:bold;">DocAI:</p>', unsafe_allow_html=True)
+    st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
+    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻  How to Use:</p>', unsafe_allow_html=True)
+    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
+    st.markdown('1. **Upload an Article**: Click on the "Upload an article" button to upload a text (.txt) or PDF (.pdf) file containing the content you want to query.')
+
+    st.markdown('2. **Enter your Question**: Enter your question or query in the "Enter your question" field. This question will be used to generate a response based on the uploaded content.')
+
+    st.markdown('3. **Generate Response**: After uploading the file and entering the question, click the "Generate Response" button. This will trigger the response generation process.')
+    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
+    # Limitations
+    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">Limitations ⚠️:</p>', unsafe_allow_html=True)
+    st.markdown('1. **Supported File Formats**: Only text (.txt) and PDF (.pdf) file formats are supported for uploading. Other formats are not supported.')
+
+    st.markdown('2. **Query Text Required**: You must enter a question or query in the "Enter your question" field. Without a question, you cannot generate a response.')
+
+    st.markdown('3. **Response Time**: The response generation process may take some time, depending on the complexity of the query and the size of the uploaded file.')
+    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
 
     def generate_response(uploaded_file, openai_api_key, query_text):
         # Load document if file is uploaded

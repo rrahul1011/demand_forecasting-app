@@ -184,7 +184,9 @@ with tab1:
  #Tab 3
 with tab3:
 
-    # Initialize an empty dictionary to store column descriptions
+
+
+# Initialize an empty dictionary to store column descriptions
     column_descriptions = {}
 
     def main():
@@ -194,8 +196,9 @@ with tab3:
         st.markdown("""
         - 📂 Upload a CSV or Excel file containing your dataset.
         - 📝 Provide descriptions for each column of the dataset in the 'Column Descriptions' section.
+        - 📂 Optionally, upload a CSV or Excel file containing column descriptions.
         - ❓ Ask questions about the dataset in the 'Ask a question about the dataset' section.
-        - 🔍 Click the 'Get Answer' button to generate answer based on your question.
+        - 🔍 Click the 'Get Answer' button to generate an answer based on your question.
         """)
 
         # Display limitations with emojis
@@ -206,7 +209,9 @@ with tab3:
         - Ensure that you have a good understanding of the dataset columns to ask relevant questions.
         """)   
         st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("Upload a CSV or Excel file", type=["csv", "xlsx"])
+
+        # Upload the dataset file
+        uploaded_file = st.file_uploader("Upload a CSV or Excel file (Dataset)", type=["csv", "xlsx"])
         st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">Head of the Dataset:</p>', unsafe_allow_html=True)
         
         df_user = pd.DataFrame()
@@ -227,12 +232,37 @@ with tab3:
                     col_description = st.text_input(f"Description for column '{col}':")
                     if col_description:
                         column_descriptions[col] = col_description
-                
+                    
                 if st.button("Submit Descriptions"):
                     st.success("Descriptions submitted successfully!")
             except Exception as e:
-                st.error(f"An error occurred while reading the file: {e}")
+                st.error(f"An error occurred while reading the dataset file: {e}")
                 return
+
+        # Optionally, upload column descriptions file
+        st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
+        uploaded_desc_file = st.file_uploader("Upload a CSV or Excel file (Column Descriptions)", type=["csv", "xlsx"])
+        if uploaded_desc_file is not None:
+            try:
+                if uploaded_desc_file.name.endswith('.csv'):
+                    desc_df = pd.read_csv(uploaded_desc_file)
+                elif uploaded_desc_file.name.endswith(('.xls', '.xlsx')):
+                    desc_df = pd.read_excel(uploaded_desc_file)
+
+                # Assuming the column descriptions are in two columns: 'Column Name' and 'Description'
+                for index, row in desc_df.iterrows():
+                    col_name = row['Column Name']
+                    col_description = row['Description']
+                    if col_name and col_description:
+                        column_descriptions[col_name] = col_description
+
+                st.success("Column descriptions loaded successfully!")
+            except Exception as e:
+                st.error(f"An error occurred while reading the column descriptions file: {e}")
+
+    
+
+
         
         st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
         st.markdown('<p style="color:red; font-size:25px; font-weight:bold;">Ask a question about the dataset:</p>', unsafe_allow_html=True)

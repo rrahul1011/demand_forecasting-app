@@ -35,3 +35,4 @@ sentencepiece
 pip install faiss-cpu
 pickle
 fbprophet
+sklearn

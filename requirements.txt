@@ -32,7 +32,7 @@ openai
 tiktoken
 Cython
 sentencepiece
-pip install faiss-cpu
+faiss-cpu
 pickle
 fbprophet
 sklearn

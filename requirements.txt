@@ -5,7 +5,6 @@ openai
 pdfplumber
 streamlit-chat
 configparser
-pathli
 requests
 bs4
 pandas

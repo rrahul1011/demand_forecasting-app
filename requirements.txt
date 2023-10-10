@@ -32,6 +32,5 @@ tiktoken
 Cython
 sentencepiece
 faiss-cpu
-pickle
 fbprophet
 sklearn

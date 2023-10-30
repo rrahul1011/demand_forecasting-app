@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st 
 import openai
 import os
-from function import visualize_timeseries ,get_completion,yoy_growth,calculate_trend_slope_dataframe,extract_text_from_pdf,read_text_file,model,is_open_ai_key_valid
+from function import visualize_timeseries ,get_completion,yoy_growth,calculate_trend_slope_dataframe,extract_text_from_pdf,read_text_file,model,is_open_ai_key_valid,recommend_products
 import matplotlib.pyplot as plt
 import plotly.express as px
 import seaborn as sns
@@ -22,6 +22,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pickle
 from langchain.callbacks import get_openai_callback
 from langchain.chains.question_answering import load_qa_chain
+from prompt_per_msg import customer_style, template_string, template_string_new, best_selling_product, welcome_offer,instruction_existing
+
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.set_page_config(
             page_title="Sigmoid GenAI",
@@ -93,7 +95,7 @@ def select_level(d):
 
 ##Reading the data
 df_dash = pd.read_csv("Data/retail3.csv")
-tab1, tab2 ,tab3,tab4= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A"])
+tab1, tab2 ,tab3,tab4,tab5= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A","Personalized Welcome Message"])
 with tab2:
 
     def main():
@@ -448,3 +450,95 @@ with tab4:
 
     if __name__ == "__main__":
         main()
+with tab5:
+    llm_model = "gpt-3.5-turbo-0301"
+    chat = ChatOpenAI(temperature=1, model=llm_model, openai_api_key=openai_api_key)
+    df_final = pd.read_csv("Data/df_final_with_name2.csv")
+    existing_user = df_final["user_id"].unique()
+    # Function to generate personalized messages for new users
+    def personlized_message_new_user(template, style, welcome_offer, best_selling_pro, user_data,instruction_existing):
+        prompt_template = ChatPromptTemplate.from_template(template)
+        customer_messages = prompt_template.format_messages(
+            style=style,
+            welcome_offer=welcome_offer,
+            best_selling_product=best_selling_pro,
+            user_data=user_data,
+            instruction_existing=instruction_existing
+
+        )
+        customer_response = chat(customer_messages)
+        return customer_response.content
+
+    # Function to generate personalized messages for existing users
+    def personlized_message_existing_user(template, style, Existing_user_data, Rec_product, Offers_and_promotion,instruction_existing):
+        prompt_template = ChatPromptTemplate.from_template(template)
+        customer_messages = prompt_template.format_messages(
+            style=style,
+            Existing_user_data=Existing_user_data,
+            Offers_and_promotion=Offers_and_promotion,
+            Rec_product=Rec_product,
+            instruction_existing=instruction_existing
+        )
+        customer_response = chat(customer_messages)
+        return customer_response.content
+
+    # Define custom colors
+    primary_color = "#3498db"  # Blue
+    secondary_color = "#2ecc71"  # Green
+    background_color = "#f0f3f6"  # Light Gray
+    text_color = "#333333"  # Dark Gray
+
+    # Apply custom styles
+    st.markdown(
+        f"""
+        <style>
+        .reportview-container {{
+            background: {background_color};
+            color: {text_color};
+        }}
+        .sidebar .sidebar-content {{
+            background: {primary_color};
+            color: white;
+        }}
+        .widget-label {{
+            color: {text_color};
+        }}
+        .stButton.button-primary {{
+            background: {secondary_color};
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Recommendation part
+    st.markdown("### Personalized Welcome Message")
+    st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
+    with st.form("login_form"):
+        user_id = st.text_input("User ID")
+        user_name = st.text_input("Your Name")
+        submitted = st.form_submit_button("Login")
+
+    if submitted:
+        with st.spinner('Generating...'):
+            if user_id in existing_user:
+                if user_id:
+                    recommended_products = recommend_products(user_id, df_final)
+
+                    if recommended_products:
+                        offer = df_final[df_final["product_id"].isin(recommended_products)]["offers"].unique().tolist()
+                        offers = [offer[0], offer[-1]]
+                        item_cart=["Tanqueray Sterling Vodka", "7 Crown Appl", "Ursus Punch Vodka"]
+                        Existing_user_data = {"Name": user_name, "Existing Items in the cart":item_cart }
+                        Rec_product = recommended_products
+                        Offers_and_promotion = offers
+                        existing_user = personlized_message_existing_user(template_string, customer_style, Existing_user_data, Rec_product, Offers_and_promotion,instruction_existing)
+                        with st.chat_message("user"):
+                            st.write(existing_user)
+                    else:
+                        st.warning("Please enter the right details.")
+            else:
+                new_message = personlized_message_new_user(template_string_new, customer_style, welcome_offer, best_selling_product, user_name,instruction_existing)
+                with st.chat_message("user"):
+                    st.write(new_message)
+                

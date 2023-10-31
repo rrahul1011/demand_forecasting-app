@@ -21,7 +21,10 @@ from PyPDF2 import PdfFileReader, PdfFileWriter,PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pickle
 from langchain.callbacks import get_openai_callback
-from langchain.chains.question_answering import load_qa_chain
+from langchain.chains.question_answering import load_qa_chain  
+import requests
+import io
+from PIL import Image
 from prompt_per_msg import customer_style, template_string, template_string_new, best_selling_product, welcome_offer,instruction_existing
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -95,7 +98,7 @@ def select_level(d):
 
 ##Reading the data
 df_dash = pd.read_csv("Data/retail3.csv")
-tab1, tab2 ,tab3,tab4,tab5= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A","Personalized Welcome Message"])
+tab1, tab2 ,tab3,tab4,tab5,tab6= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A","Personalized Welcome Message","ImageGen"])
 with tab2:
 
     def main():
@@ -541,4 +544,57 @@ with tab5:
                 new_message = personlized_message_new_user(template_string_new, customer_style, welcome_offer, best_selling_product, user_name,instruction_existing)
                 with st.chat_message("user"):
                     st.write(new_message)
-                
+with tab6:
+
+
+    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
+    #API_URL = "https://api-inference.huggingface.co/models/minimaxir/sdxl-wrong-lora"
+
+    def main():
+        st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align: center;'>"
+            "<h2 style='color: #3366FF;'>🎨 Welcome! I am the ImageGenie! 🧞‍♂️</h2>"
+            "<p style='color: #FF5733;'>I generate vibrant images based on your textual descriptions.</p>"
+            "</div>",
+            unsafe_allow_html=True
+        )
+        
+        st.markdown("<p style='color: #3366FF; font-size: 18px; text-align: center;'>Ask & Visualize 🖼️</p>", unsafe_allow_html=True)
+        
+        # Apply CSS to style the horizontal lines
+        st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
+        api_key = st.text_input("Enter Your HuggingFace API key", type="password")
+        
+        # Submit button to check the API key
+        if st.button("Submit"):
+            if api_key:
+                st.success("API Detected")
+            else:
+                st.warning("Please enter your API key")
+        API_TOKEN = api_key
+        headers = {"Authorization": f"Bearer {API_TOKEN}"}
+
+        def query(payload):
+            response = requests.post(API_URL, headers=headers, json=payload)
+            return response.content
+        
+        user_input = st.text_area("Enter a Description", "")
+
+        if st.button("Generate Image"):
+            if user_input:
+                st.info("Generating image...")
+                payload = {
+                    "inputs": user_input,
+                }
+                image_bytes = query(payload)
+                image = Image.open(io.BytesIO(image_bytes))
+                st.image(image, caption="Generated Image", use_column_width=True)
+                st.success("Image generated successfully!")
+                st.download_button("Download Image", image_bytes, file_name="generated_image.png")
+            else:
+                st.warning("Please enter a text prompt.")
+
+    if __name__ == "__main__":
+        main()
+

@@ -3,34 +3,20 @@ import pandas as pd
 import streamlit as st 
 import openai
 import os
-from function import visualize_timeseries,yoy_growth,calculate_trend_slope_dataframe,extract_text_from_pdf,read_text_file,model,is_open_ai_key_valid,recommend_products
+from function import model,recommend_products
 import matplotlib.pyplot as plt
 import plotly.express as px
 import seaborn as sns
-import pyperclip
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 import streamlit as st
-from langchain.llms import OpenAI
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.chains import RetrievalQA
-from langchain.vectorstores import FAISS
-from PyPDF2 import PdfFileReader, PdfFileWriter,PdfReader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-import pickle
-from langchain.callbacks import get_openai_callback
-from langchain.chains.question_answering import load_qa_chain  
-import requests
-import io
-from PIL import Image
+
 from prompt_per_msg import customer_style, template_string, template_string_new, best_selling_product, welcome_offer,instruction_existing
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.set_page_config(
             page_title="Sigmoid GenAI",
-            page_icon="Code/cropped-Sigmoid_logo_3x.png"  
+            page_icon="./Code/cropped-Sigmoid_logo_3x.png"  
         )
 st.sidebar.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
 st.sidebar.image("Code/cropped-Sigmoid_logo_3x.png", use_column_width=True)
@@ -58,136 +44,10 @@ with st.sidebar:
 
 
 openai_api_key = st.session_state.get("OPENAI_API_KEY")
-if not openai_api_key:
-    st.warning(
-        "🔐 Enter API Key to Know More About Me 😊, You can get a key at"
-        " https://platform.openai.com/account/api-keys."
-    )
-if not is_open_ai_key_valid(openai_api_key):
-    st.stop()
-def select_country(d):
-    country = st.sidebar.selectbox("Select Country:", d["geo"].unique().tolist())
-    return country
 
-def select_level(d):
-    levels = ["geo", "category", "brand", "SKU"]
-    selected_levels = st.sidebar.multiselect("Select Levels", levels, default=["geo"])
-
-    selected_category = None
-    selected_brand = None
-    selected_SKU = None
-
-    if "category" in selected_levels:
-        st.sidebar.header("Category")
-        category_options = d["category"].unique().tolist()
-        selected_category = st.sidebar.selectbox("Select category:", category_options)
-
-    if "brand" in selected_levels:
-        st.sidebar.header("Brand")
-        brand_options = d["brand"].unique().tolist()
-        selected_brand = st.sidebar.selectbox("Select brand:", brand_options)
-
-    if "SKU" in selected_levels:
-        st.sidebar.header("SKU")
-        SKU_options = d["SKU"].unique().tolist()
-        selected_SKU = st.sidebar.selectbox("Select SKU:", SKU_options)
-
-    return selected_levels, selected_category, selected_brand, selected_SKU
-
-
-
-##Reading the data
-df_dash = pd.read_csv("Data/retail3.csv")
-tab1, tab2 ,tab3,tab4,tab5,tab6= st.tabs(["About the App", "Demand forecasting interpreater","CodeAI","Q&A","Personalized Welcome Message","ImageGen"])
-with tab2:
-
-    def main():
-       
-        # st.markdown("<h1 style='color: blue;'>GenAI: Time Series Dashboard</h1>", unsafe_allow_html=True)
-        st.markdown('<p style="color:red; font-size:30px; font-weight:bold;">GenAI: Time Series Dashboard:</p>', unsafe_allow_html=True)
-        st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻  How to Use:</p>', unsafe_allow_html=True)
-        st.write("1. Select a country from the sidebar to filter data.")
-        st.write("2. Choose the levels you want to analyze: geo, category, brand, SKU.")
-        st.write("3. Visualize your time series data.")
-        st.write("4. Click on Get insights.")
-        st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">Limitations ⚠️:</p>', unsafe_allow_html=True)
-        st.write("- It may not capture all nuances and context")
-        st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.sidebar.header("User Inputs")
-        country = select_country(df_dash)
-        selected_levels = select_level(df_dash)
-
-        # Time Series Visualization Section
-        st.subheader("Visualize your time series")
-        st.markdown("---")
-        data = visualize_timeseries(df_dash,selected_levels[0], country,
-                                    selected_levels[1], selected_levels[2], selected_levels[3])    
-        data_trend = calculate_trend_slope_dataframe(data)
-        if data_trend.empty:
-            pass
-        else:
-            data_trend_2=data_trend.groupby(["scenario","trend"])[["slope_his","slope_for"]].mean().reset_index()
-        if data.empty:
-            pass
-        else:
-            data_yoy = yoy_growth(data)
-        data_trend_3 =data_trend_2[["scenario","trend"]]
-        if st.button("Get Analysis"):
-            ## Forescated and Historical analysis
-            analysis_string ="""Generate the analysis based on instruction\
-                                    that is delimated by triple backticks.\
-                                    isntruction: ```{instruction_analyis}```\
-                                    """
-            analysis_templete= ChatPromptTemplate.from_template(analysis_string)
-
-            instruction_analyis =f"""You are functioning as an AI data analyst.
-            1.You will be analyzing two datasets: trend_dataset and year on year growth dataset.
-            2.Trend_dataset has the following columns:
-                Scenario: Indicates if a data point is historical or forecasted.
-                Trend: Indicates the trend of the data for a specific scenario.
-                year on year growth dataset has the following columns:
-                Year: Indicates the year.
-                yoy_growth: Indicates the percentage quantity change compared to the previous year.
-            4.Start the output as "Insight and Findings:" and report in point  form
-            5.Analyze the trend based on the 'Trend' column of the trend_dataset:
-                a.Analyze Historical Data.
-                b.Analyze Forecasted Data.
-            6.Analyze the year on year growth based on the year on year growth dataset also include the change percentage
-            7.Provide this analysis without including any code.
-            8.The datasets: {data_trend_3} for trend analysis and {data_yoy} for year-on-year growth analysis.
-            9.Report back only the insights and findings.
-            10.Use at most 200 words.
-            11.provide conclusions about the dataset's performance in 50 words over the years \
-            12.Present your findings as if you are analyzing a plot."""
-            chat = ChatOpenAI(temperature=0.0, model=model,openai_api_key=openai_api_key)
-            user_analysis = analysis_templete.format_messages(instruction_analyis=instruction_analyis)
-            with st.spinner('Generating...'):
-                response = chat(user_analysis)
-                st.write(response.content)
-        st.markdown("---")
-
-    if __name__ == "__main__":
-        main()
-with tab1:
-    st.markdown('<p style="color:red; font-size:30px; font-weight:bold;">About The App:</p>', unsafe_allow_html=True)
-    st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)   
-    st.markdown("👋 Welcome to Sigmoid GenAI - Your Data Analysis APP!")
-    st.write("This app is designed to help you analyze and visualize your data.")
-    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻  How to Use:</p>', unsafe_allow_html=True)
-    st.write("1. Please enter your API key in side bar and click on the ENTER")
-    st.write("2. From the top this page please select the required tab")
-    st.write("3. Follow the instruction of that tab.")
-    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">Limitations ⚠️:</p>', unsafe_allow_html=True)
-    st.write("Please note the following limitations:")
-    st.write("- Active internet connection is required.")
-    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
  
- #Tab 3
-with tab3:
+tab1,tab2 = st.tabs(["CodeAI","Personalized Welcome Message"])
+with tab1:
 
 
 
@@ -330,133 +190,11 @@ with tab3:
     # Check if the script is run as the main program
     if __name__ == "__main__":
         main()
-with tab4:
-    st.markdown('<p style="color:red; font-size:30px; font-weight:bold;">DocAI:</p>', unsafe_allow_html=True)
-    st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">👨‍💻  How to Use:</p>', unsafe_allow_html=True)
-    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-    st.markdown('1. **Upload an Article**: Click on the "Upload an article" button to upload a text (.txt) or PDF (.pdf) file containing the content you want to query.')
 
-    st.markdown('2. **Enter your Question**: Enter your question or query in the "Enter your question" field. This question will be used to generate a response based on the uploaded content.')
-
-    st.markdown('3. **Generate Response**: After uploading the file and entering the question, click the "Generate Response" button. This will trigger the response generation process.')
-    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-    # Limitations
-    st.markdown('<p style="color:blue; font-size:20px; font-weight:bold;">Limitations ⚠️:</p>', unsafe_allow_html=True)
-    st.markdown('1. **Supported File Formats**: Only text (.txt) and PDF (.pdf) file formats are supported for uploading. Other formats are not supported.')
-
-    st.markdown('2. **Query Text Required**: You must enter a question or query in the "Enter your question" field. Without a question, you cannot generate a response.')
-
-    st.markdown('3. **Response Time**: The response generation process may take some time, depending on the complexity of the query and the size of the uploaded file.')
-    st.markdown("<hr style='border: 1.5px solid red; width: 100%;'>", unsafe_allow_html=True)
-
-    def generate_response(uploaded_file, openai_api_key, query_text):
-        # Load document if file is uploaded
-        if uploaded_file is not None:
-            documents = [uploaded_file.read().decode()]
-            # Split documents into chunks
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-            texts = text_splitter.create_documents(documents)
-            # Select embeddings
-            embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-            # Create a vectorstore from documents
-            db = FAISS.from_documents(texts, embeddings)
-            # Create retriever interface
-            retriever = db.as_retriever()
-            # Create QA chain
-            qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key=openai_api_key), chain_type='stuff', retriever=retriever)
-            return qa.run(query_text)
-    def pdf_chat(uploaded_file,query):
-
-        if uploaded_file is not None:
-            pdf_reader = PdfReader(uploaded_file)
-
-            text = ""
-            for page in pdf_reader.pages:
-                text+= page.extract_text()
-
-            #langchain_textspliter
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size = 1000,
-                chunk_overlap = 200,
-                length_function = len
-            )
-
-            chunks = text_splitter.split_text(text=text)
-
-            
-            #store pdf name
-            store_name = uploaded_file.name[:-4]
-            
-            if os.path.exists(f"{store_name}.pkl"):
-                with open(f"{store_name}.pkl","rb") as f:
-                    vectorstore = pickle.load(f)
-                #st.write("Already, Embeddings loaded from the your folder (disks)")
-            else:
-                #embedding (Openai methods) 
-                embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-
-                #Store the chunks part in db (vector)
-                vectorstore = FAISS.from_texts(chunks,embedding=embeddings)
-
-                with open(f"{store_name}.pkl","wb") as f:
-                    pickle.dump(vectorstore,f)
-                
-                #st.write("Embedding computation completed")
-
-            #st.write(chunks)
-            
-            #Accept user questions/query
-
-    
-            #st.write(query)
-
-            if query:
-                docs = vectorstore.similarity_search(query=query,k=3)
-                #st.write(docs)
-                
-                #openai rank lnv process
-                llm = OpenAI(temperature=0,openai_api_key=openai_api_key)
-                chain = load_qa_chain(llm=llm, chain_type= "stuff")
-                
-                with get_openai_callback() as cb:
-                    response = chain.run(input_documents = docs, question = query)
-                    
-        return response
-    def main():
-        # File upload
-        uploaded_file = st.file_uploader('Upload an article', type=['txt', 'pdf'])
-
-        # Query text
-        query_text = st.text_input('Enter your question:', placeholder='Please provide a short summary.', disabled=not uploaded_file)
-        query_text+= "Always give the complete answer"
-
-        # Form input and query
-        result = []
-
-        if st.button('Generate Response'):  # Add a button to trigger response generation
-            with st.spinner('Generating...'):
-                if query_text:
-                    if uploaded_file.type == 'text/plain':
-                        response = generate_response(uploaded_file, openai_api_key, query_text)
-                        result.append(response)
-                    elif uploaded_file.type == 'application/pdf':
-                        # Handle plain text file
-                        response = pdf_chat(uploaded_file,query_text)
-                        result.append(response)
-                    else:
-                        response = "Unsupported file format. Please upload a PDF or text file."
-
-
-        if len(result):
-            st.write(result[0])  # Display the response if there is a result
-
-    if __name__ == "__main__":
-        main()
-with tab5:
+with tab2:
     llm_model = "gpt-3.5-turbo-0301"
     chat = ChatOpenAI(temperature=1, model=llm_model, openai_api_key=openai_api_key)
-    df_final = pd.read_csv("Data/df_final_with_name2.csv")
+    df_final = pd.read_csv("./Data/df_final_with_name2.csv")
     existing_user = df_final["user_id"].unique()
     # Function to generate personalized messages for new users
     def personlized_message_new_user(template, style, welcome_offer, best_selling_pro, user_data,instruction_existing):
@@ -544,57 +282,4 @@ with tab5:
                 new_message = personlized_message_new_user(template_string_new, customer_style, welcome_offer, best_selling_product, user_name,instruction_existing)
                 with st.chat_message("user"):
                     st.write(new_message)
-with tab6:
-
-
-    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
-    #API_URL = "https://api-inference.huggingface.co/models/minimaxir/sdxl-wrong-lora"
-
-    def main():
-        st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-        st.markdown(
-            "<div style='text-align: center;'>"
-            "<h2 style='color: #3366FF;'>🎨 Welcome! I am the ImageGenie! 🧞‍♂️</h2>"
-            "<p style='color: #FF5733;'>I generate vibrant images based on your textual descriptions.</p>"
-            "</div>",
-            unsafe_allow_html=True
-        )
-        
-        st.markdown("<p style='color: #3366FF; font-size: 18px; text-align: center;'>Ask & Visualize 🖼️</p>", unsafe_allow_html=True)
-        
-        # Apply CSS to style the horizontal lines
-        st.markdown("<hr style='border: 2px solid red; width: 100%;'>", unsafe_allow_html=True)
-        api_key = st.text_input("Enter Your HuggingFace API key", type="password")
-        
-        # Submit button to check the API key
-        if st.button("Submit"):
-            if api_key:
-                st.success("API Detected")
-            else:
-                st.warning("Please enter your API key")
-        API_TOKEN = api_key
-        headers = {"Authorization": f"Bearer {API_TOKEN}"}
-
-        def query(payload):
-            response = requests.post(API_URL, headers=headers, json=payload)
-            return response.content
-        
-        user_input = st.text_area("Enter a Description", "")
-
-        if st.button("Generate Image"):
-            if user_input:
-                st.info("Generating image...")
-                payload = {
-                    "inputs": user_input,
-                }
-                image_bytes = query(payload)
-                image = Image.open(io.BytesIO(image_bytes))
-                st.image(image, caption="Generated Image", use_column_width=True)
-                st.success("Image generated successfully!")
-                st.download_button("Download Image", image_bytes, file_name="generated_image.png")
-            else:
-                st.warning("Please enter a text prompt.")
-
-    if __name__ == "__main__":
-        main()
 

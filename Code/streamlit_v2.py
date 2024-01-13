@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st 
 import openai
 import os
-from function import visualize_timeseries ,get_completion,yoy_growth,calculate_trend_slope_dataframe,extract_text_from_pdf,read_text_file,model,is_open_ai_key_valid,recommend_products
+from function import visualize_timeseries,yoy_growth,calculate_trend_slope_dataframe,extract_text_from_pdf,read_text_file,model,is_open_ai_key_valid,recommend_products
 import matplotlib.pyplot as plt
 import plotly.express as px
 import seaborn as sns

@@ -3,7 +3,7 @@ from surprise import Dataset, Reader, KNNBasic
 from surprise.model_selection import train_test_split
 from surprise import accuracy
 
-df = pd.read_csv("Data/df_final_with_name2.csv")
+df = pd.read_csv("./Data/df_final_with_name2.csv")
 
 # Create a Surprise Dataset
 reader = Reader(rating_scale=(1, 5))

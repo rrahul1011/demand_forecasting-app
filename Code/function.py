@@ -16,9 +16,9 @@ def recommend_products(user_id,df,top_n=5):
         top_rated_products = list(pd.Series(df.sort_values(by='rating', ascending=False)['product_id'].head(top_n)))
         return top_rated_products
     else:
-        pivot_table = df.pivot_table(index='user_id', columns='product_id', values='rating', fill_value=0)
-        user_ratings = pivot_table.loc[user_id]
-        similarity = pivot_table.corrwith(user_ratings, axis=0)
+        pivot_write = df.pivot_write(index='user_id', columns='product_id', values='rating', fill_value=0)
+        user_ratings = pivot_write.loc[user_id]
+        similarity = pivot_write.corrwith(user_ratings, axis=0)
         similar_products = similarity.sort_values(ascending=False).index[1:]  
         recommended_products = [product for product in similar_products if product not in df[df['user_id'] == user_id]['product_id']]
         return recommended_products[:top_n]
@@ -103,3 +103,66 @@ def sidebar_fix_width():
     """,
     unsafe_allow_html=True,
     )
+
+import pandas as pd
+import streamlit as st
+
+def head_df(df):
+    """
+    Display comprehensive information about a DataFrame including start date, end date, data types, null values, duplicates,
+    unique values, basic statistics, value counts for categorical columns, correlation matrix, data shape, and column names.
+
+    Args:
+    df (pandas.DataFrame): The DataFrame to analyze.
+
+    Returns:
+    pandas.DataFrame: The first few rows (head) of the DataFrame.
+    """
+
+    def create_box(title):
+        styled_text = (
+                f'<div style="border: 1px solid #1e3d7d; padding: 3px; background-color: #0996ce; color: white;border-radius: 5px;width: 300px;"">'
+                f'<div style="font-size: 16px; color: white;"><b>{title}</b></div>' 
+                f'</div>'
+            )
+
+
+        # Display the styled text using Streamlit's markdown
+        st.markdown(styled_text, unsafe_allow_html=True)
+
+    # Check if the DataFrame has a 'date' column and display start and end dates
+    if 'date' in df.columns:
+        create_box("Date Information:")
+        df["date"] = pd.to_datetime(df["date"])
+        st.write(f"Start date: {df['date'].min()}<br>End date: {df['date'].max()}")
+
+    # Display data types of columns
+    create_box("Data Types:")
+    st.write(df.dtypes)
+
+    # Calculate and display null values count for each column
+    create_box("Null Values:")
+    st.write(df.isnull().sum())
+
+    # Display the number of duplicate rows in the dataset
+    create_box("Duplicate Rows:")
+    st.write(f"Number of duplicates: {df.duplicated().sum()}")
+
+    # Display the number of unique values in each column
+    create_box("Number of Unique Values:")
+    st.write(df.nunique())
+    # Display basic statistics for numeric columns
+    create_box("Basic Statistics for Numeric Columns:")
+    st.write(df.describe())
+
+    # Display value counts for categorical columns
+    categorical_columns = df.select_dtypes(include=['object'])
+    for column in categorical_columns:
+        create_box(f"Value Counts for {column}:")
+        st.write(df[column].value_counts())
+
+    # Display the shape of the DataFrame
+    create_box("Data Shape:")
+    st.write(f"Rows: {df.shape[0]}, Columns: {df.shape[1]}")
+
+
